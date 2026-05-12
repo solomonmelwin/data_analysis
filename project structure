@@ -1,0 +1,10 @@
+business_dashboard_project/
+│
+├── data/
+│   └── superstore.csv
+│
+├── app.py
+├── analysis.ipynb
+├── requirements.txt
+├── README.md
+└── screenshots/
