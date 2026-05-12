@@ -1,95 +1,71 @@
 import streamlit as st
 import pandas as pd
-
-st.markdown("<h1 style='text-align: center;'>Restaurant Sales Dashboard</h1>", unsafe_allow_html=True)
-
-df =pd.read_csv("data/sales.csv")
-
-with st.expander("View Sample Data"):
-    st.dataframe(df.head())
-
-st.write("## Insights")
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.metric("Total Sales", f"${round(df["total_bill"].sum(), 2)}")
-
-with col2:
-    st.metric("Average Sales", f"${round(df["total_bill"].mean(), 2)}")
-
-with col3:
-    st.metric("Total Orders", len(df))
-
-st.markdown("---")
-
-st.markdown("## 📊 Sales Insights")
-
-sales_by_day = df.groupby("day")["total_bill"].sum()
-sales_by_time = df.groupby("time")["total_bill"].sum()
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-sns.set_style("whitegrid")
-sns.set_palette("Set2")  # nice soft colors
+st.set_page_config(page_title="Business sales dashboard", layout="wide")
 
-col1, col2 = st.columns(2)
+st.header("Executive Summary")
+st.divider()
 
-with col1:
-    fig, ax = plt.subplots(figsize=(6,4))
+st.title("Business Performance Dashboard")
 
-    sales_by_day.plot(kind="bar", ax=ax, color="skyblue")
+st.markdown("Analyze Sales, Profit, and Customer Trends.")
 
-    ax.set_title("📊 Weekly Sales Performance", fontsize=14)
-    ax.set_xlabel("Day")
-    ax.set_ylabel("Revenue")
+df=pd.read_csv("data/superstore.CSV",encoding="latin-1")
 
-    # Add value labels on top
-    for i, v in enumerate(sales_by_day):
-        ax.text(i, v + 10, str(round(v, 1)), ha='center')
+st.sidebar.header("Filters")
 
-    st.pyplot(fig)
-with col2:
-    fig, ax = plt.subplots(figsize=(6,4))
+region = st.sidebar.multiselect("Select Region", df["Region"].unique(),default=df["Region"].unique())
+filtered_df =df[df["Region"].isin(region)]
+total_sales =filtered_df["Sales"].sum()
+total_profit =filtered_df["Profit"].sum()
+total_orders=len(filtered_df)
 
-    sales_by_time.plot(kind="bar", ax=ax, color="orange")
+col1,col2,col3 =st.columns(3)
 
-    ax.set_title("⏰ Revenue: Lunch vs Dinner", fontsize=14)
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Revenue")
+col1.metric("Total Sales",f"${total_sales:,.0f}")
+col2.metric("Total Profit",f"${total_profit:,.0f}")
+col3.metric("Total Orders",total_orders)
 
-    for i, v in enumerate(sales_by_time):
-        ax.text(i, v + 10, str(round(v, 1)), ha='center')
+sales_by_region = filtered_df.groupby("Region")["Sales"].sum()
 
-    st.pyplot(fig)
-
-st.markdown("---")
-
-
-st.markdown("## 📈 Customer Behavior")
-
-fig, ax = plt.subplots()
-
-sns.histplot(df["total_bill"], bins=20, kde=True, color="purple", ax=ax)
-
-ax.set_title("Distribution of Customer Spending")
-ax.set_xlabel("Bill Amount")
-ax.set_ylabel("Number of Orders")
-
+fig, ax =plt.subplots()
+sales_by_region.plot(kind="bar", ax=ax)
+ax.set_xlabel("Region")
+ax.set_ylabel("Total Sales")
+ax.set_title("Sales by Region")
 st.pyplot(fig)
 
-st.markdown("---") 
+profit_by_category =filtered_df.groupby("Category")["Profit"].sum()
+fig2 , ax2 =plt.subplots()
+profit_by_category.plot(kind="bar", ax=ax2,color="orange")
+ax2.set_xlabel("Category")
+ax2.set_ylabel("Total Profit")
+ax2.set_title("Profit by Category")
+st.pyplot(fig2)
 
-st.markdown("## Buisness Insights")
+top_customers=(filtered_df.groupby("Customer Name")["Sales"].sum().sort_values(ascending=False).head(10))
 
+st.subheader("Top 10 Customers by Sales")
+st.dataframe(top_customers)
 
-st.info("💡 Most sales happen on weekends, especially Saturday and Sunday.")
+monthly_sales =df.groupby("Order Date")["Sales"].sum()
+st.line_chart(monthly_sales)
+st.subheader("Buisness Insights")
 
-st.info("💡 Dinner generates significantly more revenue than lunch.")
+st.write("""
+- The West region shows strong sales performance.
+- Some categories generate high sales but low profit. 
+- Top customers contribute significantly to revenue. 
+""")
 
-st.info("💡 Most customers spend between 10–25, indicating mid-range pricing.")
+st.subheader("Recommendations")
+st.write("""
+- Increase focus on high-profit Categories.
+- Reduce excessive discounts on low-margin products.
+- Target performing Regions with Promotions.
+- Improve performance in weaker sales months.
+""")
 
-
-st.success("📈 Peak sales occur during dinner time and weekends.")
-
-st.caption("Built using Python + Streamlit | Data Analytics Dashboard with Business Insights")
+st.success("Dashboard loaded successfully!")
