@@ -1,0 +1,8 @@
+the rquirements for this projects are
+1.data
+2. python latest version
+3. libraries to be installed
+  -pandas
+  -matplotlib
+  -seaborn
+  -streamlit
